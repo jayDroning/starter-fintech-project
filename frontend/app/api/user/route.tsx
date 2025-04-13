@@ -1,16 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { usersDB } from '@/app/lib/usersDB';
 
-// Mock database (now with name and profile picture)
-const usersDB = [
-  {
-    id: 1,
-    email: 'user@example.com',
-    name: 'John Doe',
-    profilePic: 'https://randomuser.me/api/portraits/men/1.jpg', // Example profile picture
-    password: '$2b$10$53eSDnoJbnATKy4DeEfYn.SKBjTBSkmjLDyuUK5pgpl6Wvge4.ho6', // hashed password for 'password123'
-  },
-];
 
 // JWT Secret (store this securely in your environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';

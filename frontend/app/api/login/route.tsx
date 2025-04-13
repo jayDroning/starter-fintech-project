@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'; // bcrypt for comparing passwords
 import jwt from 'jsonwebtoken'; // jwt for creating tokens
-
-// Mocked database (replace with your actual DB)
-const usersDB = [
-  {
-    id: 1,
-    email: 'user@example.com',
-    password: '$2b$10$53eSDnoJbnATKy4DeEfYn.SKBjTBSkmjLDyuUK5pgpl6Wvge4.ho6', // bcrypt-hashed password for 'password123'
-  },
-];
+import { usersDB } from '@/app/lib/usersDB';
 
 // Secret key for JWT signing (store it in an env variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
