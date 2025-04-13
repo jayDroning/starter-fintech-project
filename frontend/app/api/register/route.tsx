@@ -1,48 +1,75 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt'; // bcrypt for hashing passwords
-import jwt from 'jsonwebtoken'; // jwt for creating tokens
-import { usersDB } from '@/app/lib/usersDB';
+import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { v4 as uuidv4 } from 'uuid'
 
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Use your secret key
+export async function POST(req: NextRequest) {
+  const { name, email, password, profilePic } = await req.json()
 
-export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    // Read existing users or start with an empty array
+    const fileData = fs.existsSync(USERS_FILE)
+      ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
+      : []
 
-    // Check if both email and password are provided
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    // Check if the user already exists
+    const existing = fileData.find((u: any) => u.email === email)
+    if (existing) {
+      return NextResponse.json({ message: 'User already exists' }, { status: 400 })
     }
 
-    // Check if the email already exists
-    const existingUser = usersDB.find((user) => user.email === email);
-    if (existingUser) {
-      return NextResponse.json({ error: 'Email is already registered' }, { status: 400 });
-    }
+    // Hash the password
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-    // Hash the password using bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Set default profile picture if not provided
+    const profilePicUrl = profilePic || "https://randomuser.me/api/portraits/women/50.jpg";
 
-    // Create a new user and add it to the database (mock in this case)
+    // Create the new user object
     const newUser = {
-      id: usersDB.length + 1, // Simple increment for mock ID
+      id: uuidv4(),
+      name,
       email,
       password: hashedPassword,
-    };
+      balance: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      profilePic: profilePicUrl // Store the profile picture URL
+    }
 
-    usersDB.push(newUser); // Add the new user to the "database"
+    // Add the new user to the array
+    fileData.push(newUser)
 
-    // Create a JWT token for the new user
+    // Save the updated list of users to the file
+    fs.writeFileSync(USERS_FILE, JSON.stringify(fileData, null, 2))
+
+    // Generate JWT token
     const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email },
+      { id: newUser.id, email, name },
       JWT_SECRET,
       { expiresIn: '1h' }
-    );
+    )
 
-    return NextResponse.json({ message: 'User registered successfully', token });
+    return NextResponse.json({
+      message: 'User registered successfully',
+      token,
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        balance: newUser.balance,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        profilePic: newUser.profilePic, // Include profile picture URL
+      }
+    })
   } catch (error) {
-    console.error('Error during registration:', error);
-    return NextResponse.json({ error: 'An error occurred during registration' }, { status: 500 });
+    console.error('Error in registration:', error)
+    return NextResponse.json({ message: 'Server error' }, { status: 500 })
   }
 }

@@ -5,8 +5,10 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation'; // For redirecting after successful registration
 
 export default function RegisterPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [profilePic, setProfilePic] = useState(''); // New field for profile picture
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +21,12 @@ export default function RegisterPage() {
 
     try {
       // Send the registration data to the backend API
-      const response = await axios.post('/api/register', { email, password });
+      const response = await axios.post('/api/register', {
+        name,
+        email,
+        password,
+        profilePic: profilePic || 'https://randomuser.me/api/portraits/women/50.jpg', // Default profile picture
+      });
 
       // Store the JWT token received in localStorage or cookies
       localStorage.setItem('authToken', response.data.token);
@@ -48,6 +55,15 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister}>
           <input
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+
+          <input
             type="email"
             placeholder="Email"
             value={email}
@@ -73,6 +89,14 @@ export default function RegisterPage() {
               {showPassword ? '🙈' : '👁️'}
             </button>
           </div>
+
+          <input
+            type="text"
+            placeholder="Profile Picture URL (Optional)"
+            value={profilePic}
+            onChange={(e) => setProfilePic(e.target.value)}
+            className="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
           <button
             type="submit"

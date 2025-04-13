@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Alice",
+    "email": "hold@on.man",
+    "password": "$2b$10$pNPfr2cuc9m6WkZU7h1yA.vms9iQ2Lcj4VBAxLcB32vnsxJqG9fVi",
+    "profilePic": "https://randomuser.me/api/portraits/women/50.jpg",
+    "address": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10001"
+    },
+    "phoneNumber": "+1 555-1234",
+    "balance": 100,
+    "createdAt": "2025-04-12T12:00:00Z",
+    "updatedAt": "2025-04-12T12:00:00Z"
+  },
+  {
+    "id": "f3bd62bf-9007-401b-8c9c-1eaecc74a190",
+    "email": "cypis@koka.com",
+    "password": "$2b$10$Ql2Tjq0dAeZkIfqrAs.uNuZHo6rtTqmWF6l93qcZO3nYRQi.ydzzC",
+    "balance": 0,
+    "createdAt": "2025-04-13T07:04:15.960Z",
+    "updatedAt": "2025-04-13T07:04:15.960Z",
+    "profilePic": "https://randomuser.me/api/portraits/women/50.jpg"
+  },
+  {
+    "id": "a60c7cc7-0651-42ee-83e9-143b4a75da05",
+    "name": "John Cypid",
+    "email": "hello@hello.com",
+    "password": "$2b$10$lwAhVOdKW2Gw4.LXr5xLVetPspCaTCcSLquBcfJtYSX4bb2czHYT.",
+    "balance": 0,
+    "createdAt": "2025-04-13T07:06:20.825Z",
+    "updatedAt": "2025-04-13T07:06:20.825Z",
+    "profilePic": "https://randomuser.me/api/portraits/women/50.jpg"
+  }
+]

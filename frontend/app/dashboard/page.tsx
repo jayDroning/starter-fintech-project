@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -73,10 +73,12 @@ export default function DashboardPage() {
         )}
 
         {/* User Info Details */}
-        <div className="mb-6">
-          <p className="text-lg">Email: {user.email}</p>
-          <p className="text-lg">User ID: {user.id}</p>
-        </div>
+        {user && (
+          <div className="mb-6">
+            <p className="text-lg">Email: {user.email}</p>
+            <p className="text-lg">User ID: {user.id}</p>
+          </div>
+        )}
 
         {/* Edit Profile Button */}
         <button

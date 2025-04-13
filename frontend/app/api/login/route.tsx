@@ -1,57 +1,47 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt'; // bcrypt for comparing passwords
-import jwt from 'jsonwebtoken'; // jwt for creating tokens
-import { usersDB } from '@/app/lib/usersDB';
+import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 // Secret key for JWT signing (store it in an env variable in production)
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'
 
-export async function POST(req: Request) {
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
+
+export async function POST(req: NextRequest) {
+  const { email, password } = await req.json()
+
   try {
-    const { email, password } = await req.json();
-
-    // Validate that both email and password are provided
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    if (!fs.existsSync(USERS_FILE)) {
+      return NextResponse.json({ message: 'No users found' }, { status: 404 })
     }
 
-    // Find the user in the "database" (mocked here)
-    const user = usersDB.find((user) => user.email === email);
+    const fileData = fs.readFileSync(USERS_FILE, 'utf-8')
+    const users = JSON.parse(fileData)
 
-    
-    // If user is not found, return an error
+    const user = users.find((u: any) => u.email === email)
+
     if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 })
     }
 
-    // Compare the hashed password with the user's input password
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    const passwordd = 'password123'; // The plain password you want to hash
+    const isPasswordValid = await bcrypt.compare(password, user.password)
 
-    // Hash the password
-    bcrypt.hash(passwordd, 10, (err, hash) => {
-      if (err) throw err;
-      console.log(hash); // This is your hashed password
-    });
-    console.log(password);
-
-    console.log(user.password);
-    
-    // If passwords don't match, return an error
-    if (!passwordMatch) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    if (!isPasswordValid) {
+      return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 })
     }
 
-    // Create a JWT token (expires in 1 hour)
+    // Generate JWT
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { email: user.email, name: user.name },
       JWT_SECRET,
       { expiresIn: '1h' }
-    );
+    )
 
-    // Send the token back to the client
-    return NextResponse.json({ message: 'Login successful', token });
+    return NextResponse.json({ message: 'Login successful', token })
   } catch (error) {
-    return NextResponse.json({ error: 'An error occurred during login' }, { status: 500 });
+    console.error('Login error:', error)
+    return NextResponse.json({ message: 'Server error during login' }, { status: 500 })
   }
 }
