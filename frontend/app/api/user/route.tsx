@@ -15,12 +15,14 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded: any = jwt.verify(token, JWT_SECRET); // Decode token
+    console.log(decoded); // Debugging: Check the decoded token
 
-    // Find the user by the decoded id (assuming you are storing user data in a JSON file)
+    // Find the user by the decoded uuid (assuming you are storing user data in a JSON file)
     const fileData = fs.existsSync(USERS_FILE)
       ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
       : [];
-    const user = fileData.find((u: any) => u.email === decoded.email);
+    
+    const user = fileData.find((u: any) => u.uuid === decoded.uuid); // Compare by uuid
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -34,6 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Error fetching user data' }, { status: 500 });
   }
 }
+
 export async function PUT(req: NextRequest) {
   try {
     const token = req.headers.get('Authorization')?.split(' ')[1]; // Bearer token
@@ -41,9 +44,9 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Authorization token required' }, { status: 401 });
     }
 
-    // Verify the token and decode the userId
+    // Verify the token and decode the uuid
     const decoded: any = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId;
+    const userUuid = decoded.uuid;  // Make sure this contains the uuid
 
     // Read the users file
     if (!fs.existsSync(USERS_FILE)) {
@@ -53,8 +56,8 @@ export async function PUT(req: NextRequest) {
     const fileData = fs.readFileSync(USERS_FILE, 'utf-8');
     const users = JSON.parse(fileData);
 
-    // Find the user to update
-    const userIndex = users.findIndex((user: any) => user.id === userId);
+    // Find the user to update by uuid
+    const userIndex = users.findIndex((user: any) => user.uuid === userUuid); // Compare by uuid
     if (userIndex === -1) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -80,7 +83,7 @@ export async function PUT(req: NextRequest) {
 
     // Return a success response with the updated user data
     const safeUser = {
-      id: users[userIndex].id,
+      uuid: users[userIndex].uuid, // Include uuid in the response
       name: users[userIndex].name,
       email: users[userIndex].email,
       profilePic: users[userIndex].profilePic,

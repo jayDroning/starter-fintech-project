@@ -1,7 +1,6 @@
-// context/AuthContext.tsx
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,8 +13,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  useEffect(() => {
+    // Check if the token exists in localStorage when the app loads
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const login = () => {
+    setIsAuthenticated(true);
+    localStorage.setItem('authToken', 'your-jwt-token'); // Store the token in localStorage
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('authToken'); // Remove the token from localStorage
+  };
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

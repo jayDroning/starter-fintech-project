@@ -76,28 +76,52 @@ export default function DashboardPage() {
         {user && (
           <div className="mb-6">
             <p className="text-lg">Email: {user.email}</p>
-            <p className="text-lg">User ID: {user.id}</p>
+            <p className="text-lg">User ID: {user.uuid}</p>
           </div>
         )}
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold">Wallet Balance</h3>
+          <p className="text-2xl text-green-600">${user.balance}</p>
+        </div>
 
-        {/* Edit Profile Button */}
-        <button
-          onClick={() => router.push('/dashboard/edit-profile')}
-          className="bg-blue-600 text-white p-2 rounded mb-4"
-        >
-          Edit Profile
-        </button>
+         {/* Recent Transactions */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold">Recent Transactions</h3>
+          {user.transactions && user.transactions.length > 0 ? (
+            <ul>
+              {user.transactions.map((tx, index) => (
+                <li key={index} className="flex justify-between">
+                  <span>{tx.date}</span>
+                  <span>{tx.amount > 0 ? `+${tx.amount}` : tx.amount}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No transactions found</p>
+          )}
+        </div>
 
-        {/* Log Out Button */}
-        <button
-          onClick={() => {
-            localStorage.removeItem('authToken');
-            router.push('/auth/login');
-          }}
-          className="mt-4 bg-red-600 text-white p-2 rounded"
-        >
-          Log Out
-        </button>
+        <div className='flex justify-between'>
+          {/* Edit Profile Button */}
+          <button
+            onClick={() => router.push('/dashboard/edit-profile')}
+            className="bg-blue-600 text-white p-2 rounded"
+          >
+            Edit Profile
+          </button>
+
+          {/* Log Out Button */}
+          <button
+            onClick={() => {
+              localStorage.removeItem('authToken');
+              router.push('/auth/login');
+            }}
+            className="bg-red-600 text-white p-2 rounded"
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
   );

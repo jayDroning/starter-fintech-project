@@ -30,9 +30,9 @@ export async function POST(req: NextRequest) {
     // Set default profile picture if not provided
     const profilePicUrl = profilePic || "https://randomuser.me/api/portraits/women/50.jpg";
 
-    // Create the new user object
+    // Create the new user object (use uuid here)
     const newUser = {
-      id: uuidv4(),
+      uuid: uuidv4(),  // Use uuid as the key
       name,
       email,
       password: hashedPassword,
@@ -48,18 +48,19 @@ export async function POST(req: NextRequest) {
     // Save the updated list of users to the file
     fs.writeFileSync(USERS_FILE, JSON.stringify(fileData, null, 2))
 
-    // Generate JWT token
+    // Generate JWT token (include uuid in payload)
     const token = jwt.sign(
-      { id: newUser.id, email, name },
+      { uuid: newUser.uuid, email, name },  // Include uuid in the token payload
       JWT_SECRET,
       { expiresIn: '1h' }
     )
 
+    // Return a success response with the token and user info
     return NextResponse.json({
       message: 'User registered successfully',
       token,
       user: {
-        id: newUser.id,
+        uuid: newUser.uuid,  // Use uuid here
         name: newUser.name,
         email: newUser.email,
         balance: newUser.balance,
