@@ -43,12 +43,16 @@ const DashboardPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+
         if (!res.ok) throw new Error('Failed to fetch user');
 
         const data = await res.json();
         setField('user', data);
       } catch (err) {
-        setField('error', 'Failed to fetch user data');
+        // setField('error', 'Failed to fetch user data');
+        setField('error', err.error);
+        alert(`${err.error}\nThe auth token is about to be cleared!`);
+        localStorage.removeItem('authToken');
       } finally {
         setField('loading', false);
       }

@@ -6,7 +6,7 @@ import VisaSVG from '@/public/visa-logo.svg';
 const Template = ({children}) => {
   return (
     
-    <main className="flex items-center justify-center min-h-screen bg-gray-50">
+    <main className="flex items-center justify-center min-h-screen">
     <section className="text-center max-w-2xl mx-auto px-6 py-12 bg-white rounded-xl shadow-lg border border-blue-100">     
 
       <h1 className="flex justify-center items-center text-4xl font-extrabold mb-4 text-blue-700 tracking-tight">

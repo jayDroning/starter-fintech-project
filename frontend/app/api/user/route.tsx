@@ -9,33 +9,52 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 // Example user API
 const GET = async (req: NextRequest) => {
   try {
-    const token = req.headers.get('Authorization')?.split(' ')[1];
+    const token = req.headers.get('Authorization')?.split(' ')[1]; // Get token from Authorization header
+
     if (!token) {
       return NextResponse.json({ error: 'Authorization token required' }, { status: 401 });
     }
 
-    const decoded: any = jwt.verify(token, JWT_SECRET); // Decode token
-    // console.log(decoded); // Debugging: Check the decoded token
+    let decoded: any;
 
-    // Find the user by the decoded uuid (assuming you are storing user data in a JSON file)
+    try {
+      // Attempt to verify the token
+      decoded = jwt.verify(token, JWT_SECRET); // Decode token if valid
+    } catch (error: any) {
+      if (error instanceof jwt.TokenExpiredError) {
+        // Token is expired, treat the user as a guest
+        // console.log('Token expired. Treating user as a guest.');
+
+        // Optionally, you could return a specific response saying "guest mode" or return empty data
+        return NextResponse.json({ error: 'Token expired. Please log in.' }, { status: 401 });
+      } else {
+        // Any other JWT errors
+        console.log('JWT error:', error);
+        return NextResponse.json({ error: 'Invalid or malformed token' }, { status: 401 });
+      }
+    }
+
+    // If the token is valid, proceed as usual
+    // Find the user by the decoded UUID
     const fileData = fs.existsSync(USERS_FILE)
       ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
       : [];
-    
-    const user = fileData.find((u: any) => u.uuid === decoded.uuid); // Compare by uuid
+
+    const user = fileData.find((u: any) => u.uuid === decoded.uuid);
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Return full user details excluding password
+    // Return user details excluding the password
     const { password, ...safeUserData } = user;
     return NextResponse.json(safeUserData);
+
   } catch (error) {
-    console.error('Error loading user data:', error);
+    console.error('Error fetching user data:', error);
     return NextResponse.json({ error: 'Error fetching user data' }, { status: 500 });
   }
-}
+};
 
 const PUT = async (req: NextRequest) => {
   try {
