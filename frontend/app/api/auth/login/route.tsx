@@ -5,11 +5,10 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Secret key for JWT signing (store it in an env variable in production)
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'
 
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
-
-export async function POST(req: NextRequest) {
+const POST = async (req: NextRequest) => {
   const { email, password } = await req.json()
 
   try {
@@ -48,3 +47,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Server error during login' }, { status: 500 })
   }
 }
+
+export { POST }

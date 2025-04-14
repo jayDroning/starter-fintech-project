@@ -1,94 +1,119 @@
 'use client';
 
-import { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { FieldConfig, useDynamicForm } from '@/hooks/useDynamicForm';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+
+
+// Define the shape of the fields for the login form
+type LoginFormFields = {
+  email: string;
+  password: string;
+  error: string;
+  loading: boolean;
+  showPassword: boolean;
+};
+
+const LoginPage = () => {
+  const router = useRouter();
+  
+  // Define the fields with initial values for the login form
+  const fieldConfig: FieldConfig<LoginFormFields>[] = [
+    { name: 'email', initialValue: '' },
+    { name: 'password', initialValue: '' },
+    { name: 'error', initialValue: '' },
+    { name: 'loading', initialValue: false },
+    { name: 'showPassword', initialValue: false },
+  ];
+
+  const { formState, setField } = useDynamicForm(fieldConfig);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setField('loading', true);
+    setField('error', '');
 
     try {
       // Call the login API
-      const response = await axios.post('/api/login', { email, password });
+      const response = await axios.post('/api/auth/login', {
+        email: formState.email,
+        password: formState.password,
+      });
 
       // Store the JWT token received in localStorage or cookies
       localStorage.setItem('authToken', response.data.token);
 
-      setLoading(false);
+      setField('loading', false);
       alert('Login successful!');
       // Redirect to the dashboard or home page
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     } catch (error) {
-      setLoading(false);
-      setError('Invalid email or password');
+      setField('loading', false);
+      setField('error', 'Invalid email or password');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">🔐 Welcome Back!</h2>
-        <p className="text-sm text-gray-500 text-center mb-6">Please log in to your account</p>
+    <div>
+      <h2 className="text-2xl font-bold mb-4 text-center">🔐 Welcome Back!</h2>
+      <p className="text-sm text-gray-500 text-center mb-6">Please log in to your account</p>
 
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-500 text-white p-2 rounded mb-4 text-center">
-            {error}
-          </div>
-        )}
+      {/* Error message */}
+      {formState.error && (
+        <div className="bg-red-500 text-white p-2 rounded mb-4 text-center">
+          {formState.error}
+        </div>
+      )}
 
-        <form onSubmit={handleLogin}>
+      <form onSubmit={handleLogin}>
+        {/* Email Input */}
+        <input
+          type="email"
+          placeholder="Email"
+          value={formState.email}
+          onChange={(e) => setField('email', e.target.value)}
+          className="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+
+        {/* Password Input */}
+        <div className="relative mb-4">
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type={formState.showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={formState.password}
+            onChange={(e) => setField('password', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
-
-          <div className="relative mb-4">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            >
-              {showPassword ? '🙈' : '👁️'}
-            </button>
-          </div>
-
           <button
-            type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded font-semibold"
-            disabled={loading}
+            type="button"
+            onClick={() => setField('showPassword', !formState.showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
           >
-            {loading ? 'Logging in...' : '👉 Log In'}
+            {formState.showPassword ? '🙈' : '👁️'}
           </button>
-        </form>
+        </div>
 
-        <p className="text-sm text-center mt-6">
-          Don't have an account?{' '}
-          <a href="/auth/register" className="text-blue-600 hover:underline">
-            Sign up
-          </a>
-        </p>
-      </div>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded font-semibold"
+          disabled={formState.loading}
+        >
+          {formState.loading ? 'Logging in...' : '👉 Log In'}
+        </button>
+      </form>
+
+      <p className="text-sm text-center mt-6">
+        Don't have an account?{' '}
+        <a href="/auth/register" className="text-blue-600 hover:underline">
+          Sign up
+        </a>
+      </p>
     </div>
   );
-}
+};
+
+export default LoginPage;

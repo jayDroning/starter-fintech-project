@@ -7,7 +7,7 @@ const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Example user API
-export async function GET(req: NextRequest) {
+const GET = async (req: NextRequest) => {
   try {
     const token = req.headers.get('Authorization')?.split(' ')[1];
     if (!token) {
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded: any = jwt.verify(token, JWT_SECRET); // Decode token
-    console.log(decoded); // Debugging: Check the decoded token
+    // console.log(decoded); // Debugging: Check the decoded token
 
     // Find the user by the decoded uuid (assuming you are storing user data in a JSON file)
     const fileData = fs.existsSync(USERS_FILE)
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+const PUT = async (req: NextRequest) => {
   try {
     const token = req.headers.get('Authorization')?.split(' ')[1]; // Bearer token
     if (!token) {
@@ -99,3 +99,5 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update user profile' }, { status: 500 });
   }
 }
+
+export { PUT, GET }

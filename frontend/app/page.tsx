@@ -31,9 +31,7 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-50">
       <Hero />
-    </main>
   );
 };
 

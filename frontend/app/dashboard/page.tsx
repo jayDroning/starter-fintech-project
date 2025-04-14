@@ -1,128 +1,111 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FieldConfig, useDynamicForm } from '@/hooks/useDynamicForm';
+import DashboardCard from '@/components/dashboard/DashboardCard';
+import UserHeader from '@/components/dashboard/UserHeader';
+import UserDetails from '@/components/dashboard/UserDetails';
+import WalletBalance from '@/components/dashboard/WalletBalance';
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Define the shape of the form state
+type DashboardFormFields = {
+  user: {
+    name: string;
+    email: string;
+    uuid: string;
+    balance: number;
+    profilePic?: string;
+    transactions?: { date: string; amount: number }[];
+  } | null;
+  loading: boolean;
+  error: string | null;
+};
+
+const DashboardPage = () => {
   const router = useRouter();
 
-  useEffect(() => {
-    // Fetch user data from the API
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('authToken');
+  const fieldConfig: FieldConfig<DashboardFormFields>[] = [
+    { name: 'user', initialValue: null },
+    { name: 'loading', initialValue: true },
+    { name: 'error', initialValue: null },
+  ];
 
-      if (!token) {
-        // If no token, redirect to login
-        router.push('/auth/login');
-        return;
-      }
+  const { formState, setField } = useDynamicForm<DashboardFormFields>(fieldConfig);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return router.push('/auth/login');
 
       try {
-        const response = await fetch('/api/user', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch('/api/user', {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        } else {
-          setError('Failed to fetch user data');
-        }
-      } catch (error) {
-        setError('An error occurred while fetching user data');
+        if (!res.ok) throw new Error('Failed to fetch user');
+
+        const data = await res.json();
+        setField('user', data);
+      } catch (err) {
+        setField('error', 'Failed to fetch user data');
       } finally {
-        setLoading(false);
+        setField('loading', false);
       }
     };
 
-    fetchUserData();
-  }, [router]);
+    fetchUser();
+  }, [router, setField]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (formState.loading) return <div className="text-center mt-10">Loading...</div>;
+  if (formState.error) return <div className="text-center text-red-500 mt-10">{formState.error}</div>;
+  if (!formState.user) return null;
 
-  if (error) {
-    return <div>{error}</div>;
-  }
+  const { user } = formState;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">Welcome to Your Dashboard</h2>
+     <DashboardCard>
+      <UserHeader name={user.name} email={user.email} profilePic={user.profilePic} />
+      <UserDetails uuid={user.uuid} email={user.email} />
+      <WalletBalance balance={user.balance} />
 
-        {/* User Info Section */}
-        {user && (
-          <div className="flex items-center mb-6">
-            <img
-              src={user.profilePic || 'https://via.placeholder.com/150'}
-              alt="Profile"
-              className="w-16 h-16 rounded-full mr-4"
-            />
-            <div>
-              <p className="text-lg font-semibold">{user.name}</p>
-              <p className="text-sm text-gray-600">{user.email}</p>
-            </div>
-          </div>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold">📜 Recent Transactions</h3>
+        {user.transactions?.length ? (
+          <ul className="text-sm text-gray-700 space-y-1">
+            {user.transactions.map((tx, i) => (
+              <li key={i} className="flex justify-between">
+                <span>{tx.date}</span>
+                <span className={tx.amount >= 0 ? 'text-green-600' : 'text-red-500'}>
+                  {tx.amount >= 0 ? `+${tx.amount}` : tx.amount}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No transactions found.</p>
         )}
-
-        {/* User Info Details */}
-        {user && (
-          <div className="mb-6">
-            <p className="text-lg">Email: {user.email}</p>
-            <p className="text-lg">User ID: {user.uuid}</p>
-          </div>
-        )}
-        
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold">Wallet Balance</h3>
-          <p className="text-2xl text-green-600">${user.balance}</p>
-        </div>
-
-         {/* Recent Transactions */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold">Recent Transactions</h3>
-          {user.transactions && user.transactions.length > 0 ? (
-            <ul>
-              {user.transactions.map((tx, index) => (
-                <li key={index} className="flex justify-between">
-                  <span>{tx.date}</span>
-                  <span>{tx.amount > 0 ? `+${tx.amount}` : tx.amount}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No transactions found</p>
-          )}
-        </div>
-
-        <div className='flex justify-between'>
-          {/* Edit Profile Button */}
-          <button
-            onClick={() => router.push('/dashboard/edit-profile')}
-            className="bg-blue-600 text-white p-2 rounded"
-          >
-            Edit Profile
-          </button>
-
-          {/* Log Out Button */}
-          <button
-            onClick={() => {
-              localStorage.removeItem('authToken');
-              router.push('/auth/login');
-            }}
-            className="bg-red-600 text-white p-2 rounded"
-          >
-            Log Out
-          </button>
-        </div>
       </div>
-    </div>
+
+      <div className="flex justify-between">
+        <button
+          onClick={() => router.push('/dashboard/edit-profile')}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Edit Profile
+        </button>
+        <button
+          onClick={() => {
+            localStorage.removeItem('authToken');
+            router.push('/auth/login');
+          }}
+          className="bg-red-600 text-white px-4 py-2 rounded"
+        >
+          Log Out
+        </button>
+      </div>
+    </DashboardCard>
   );
-}
+};
+
+export default DashboardPage;

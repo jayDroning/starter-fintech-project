@@ -5,10 +5,11 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 
+// Secret key for JWT signing (store it in an env variable in production)
 const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'
 
-export async function POST(req: NextRequest) {
+const POST = async (req: NextRequest) => {
   const { name, email, password, profilePic } = await req.json()
 
   try {
@@ -74,3 +75,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Server error' }, { status: 500 })
   }
 }
+
+export { POST }
