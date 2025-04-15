@@ -1,15 +1,42 @@
 "use client"
-import { useState } from 'react';
-import axios from 'axios'; // For making API requests
 
-export default function SendPage() {
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [amount, setAmount] = useState('');
-  const [transactionType, setTransactionType] = useState('crypto'); // Default: crypto
-  const [transactionFee, setTransactionFee] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [confirmation, setConfirmation] = useState(false);
+import axios from 'axios'; // For making API requests
+import { FieldConfig, useDynamicForm } from '@/hooks/useDynamicForm';
+
+// Define the shape of the form state
+type DashboardFormFields = {
+  // user: {
+  //   name: string;
+  //   email: string;
+  //   uuid: string;
+  //   balance: number;
+  //   profilePic?: string;
+  //   transactions?: { date: string; amount: number }[];
+  // } | null;
+
+  recipientAddress: string;
+  amount: string;
+  transactionType: string;
+  transactionFee: number;
+  loading: boolean;
+  error: string | null;
+  confirmation: boolean;
+};
+
+const SendPage = () => {
+  
+  const fieldConfig: FieldConfig<DashboardFormFields>[] = [
+    // { name: 'user', initialValue: null },
+    { name: 'recipientAddress', initialValue: '' },
+    { name: 'amount', initialValue: '' },
+    { name: 'transactionType', initialValue: 'crypto' }, // Default: crypto
+    { name: 'transactionFee', initialValue: 0 },
+    { name: 'loading', initialValue: true },
+    { name: 'error', initialValue: null },
+    { name: 'confirmation', initialValue: false }
+  ];
+
+  const { formState, setField } = useDynamicForm<DashboardFormFields>(fieldConfig);
 
   // Dummy function to calculate transaction fees (could be dynamic depending on type)
   const calculateFee = (amount: number) => {
@@ -20,30 +47,30 @@ export default function SendPage() {
   // Handle form submission
   const handleSendTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setConfirmation(false);
+    setField('loading', true);
+    setField('error', '');
+    setField('confirmation', false);
 
     try {
       // Calculate the transaction fee dynamically
-      const fee = calculateFee(Number(amount));
-      setTransactionFee(fee);
+      const fee = calculateFee(Number(formState.amount));
+      setField('transactionFee', fee);
 
       // Simulating a transaction API request
       const response = await axios.post('/api/transactions', {
-        recipientAddress,
-        amount,
-        transactionType,
-        transactionFee: fee,
+        recipientAddress: formState.recipientAddress,
+        amount: formState.amount,
+        transactionType: formState.transactionType,
+        transactionFee: formState.transactionFee,
       });
 
       // If successful, set confirmation
-      setConfirmation(true);
-      setLoading(false);
+      setField('confirmation', true);
+      setField('loading', false);
       alert('Transaction Successful!');
     } catch (error) {
-      setLoading(false);
-      setError('Transaction failed. Please try again.');
+      setField('loading', false);
+      setField('error', 'Transaction failed. Please try again.');
     }
   };
 
@@ -52,19 +79,18 @@ export default function SendPage() {
       <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
         <h2 className="text-2xl font-bold mb-4 text-center">💸 Send Transaction</h2>
 
-        {error && (
+        {formState.error && (
           <div className="bg-red-500 text-white p-2 rounded mb-4 text-center">
-            {error}
+            {formState.error}
           </div>
         )}
 
-        {confirmation && (
+        {formState.confirmation && (
           <div className="bg-green-500 text-white p-2 rounded mb-4 text-center">
             Transaction Successful! 🎉
           </div>
         )}
 
-        {/* Send Transaction Form */}
         <form onSubmit={handleSendTransaction}>
           <div className="mb-4">
             <label htmlFor="recipientAddress" className="block text-sm font-medium text-gray-700">
@@ -73,8 +99,8 @@ export default function SendPage() {
             <input
               type="text"
               id="recipientAddress"
-              value={recipientAddress}
-              onChange={(e) => setRecipientAddress(e.target.value)}
+              value={formState.recipientAddress}
+              onChange={(e) => setField('recipientAddress', e.target.value)}
               className="w-full p-3 mt-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -87,8 +113,8 @@ export default function SendPage() {
             <input
               type="number"
               id="amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={formState.amount}
+              onChange={(e) => setField('amount', e.target.value)}
               className="w-full p-3 mt-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -100,33 +126,31 @@ export default function SendPage() {
             </label>
             <select
               id="transactionType"
-              value={transactionType}
-              onChange={(e) => setTransactionType(e.target.value)}
+              value={formState.transactionType}
+              onChange={(e) => setField('transactionType', e.target.value)}
               className="w-full p-3 mt-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="crypto">Cryptocurrency</option>
               <option value="fiat">Fiat</option>
-              {/* Add more options if needed */}
             </select>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Transaction Fee</label>
             <div className="p-3 mt-1 border border-gray-300 rounded">
-              {transactionFee ? `${transactionFee.toFixed(2)} USD` : 'Calculating...'}
+              {formState.transactionFee ? `${formState.transactionFee.toFixed(2)} USD` : 'Calculating...'}
             </div>
           </div>
 
           <button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded font-semibold"
-            disabled={loading}
+            disabled={formState.loading}
           >
-            {loading ? 'Processing...' : 'Send Transaction'}
+            {formState.loading ? 'Processing...' : 'Send Transaction'}
           </button>
         </form>
 
-        {/* Confirmation Message */}
         <p className="text-sm text-center mt-6">
           <a href="/dashboard" className="text-blue-600 hover:underline">
             Back to Dashboard
@@ -136,3 +160,5 @@ export default function SendPage() {
     </div>
   );
 }
+
+export default SendPage;

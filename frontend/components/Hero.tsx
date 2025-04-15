@@ -4,25 +4,23 @@ import Image from 'next/image';
 import VisaSVG from '@/public/visa-logo.svg';
 
 const Template = ({children}) => {
-  return (
-    
+  return (    
     <main className="flex items-center justify-center min-h-screen">
-    <section className="text-center max-w-2xl mx-auto px-6 py-12 bg-white rounded-xl shadow-lg border border-blue-100">     
+      <section className="text-center max-w-2xl mx-auto px-6 py-12 bg-white rounded-xl shadow-lg border border-blue-100">
+        <h1 className="flex justify-center items-center text-4xl font-extrabold mb-4 text-blue-700 tracking-tight">
+          <div className="w-32 text-[#1A1F71]">
+            <VisaSVG style={{ color: '#1a1aff' }}/> {/* Visa blue */}
+          </div>
+          {"Vault 💳"}
+        </h1>
 
-      <h1 className="flex justify-center items-center text-4xl font-extrabold mb-4 text-blue-700 tracking-tight">
-        {/*"Welcome to "*/} 
-        <div className="w-32 text-[#1A1F71]"> {/* Visa blue */}
-          <VisaSVG style={{ color: '#1a1aff' }}  />
+        {children}
+
+        <div className="mt-8 text-sm text-gray-400 italic">
+          A fan project inspired by Visa – for educational and creative exploration.
         </div>
-        {"Vault 💳"}
-      </h1>
-
-      {children}
-
-      <div className="mt-8 text-sm text-gray-400 italic">
-        A fan project inspired by Visa – for educational and creative exploration.
-      </div>
-    </section></main>
+      </section>
+    </main>
   )
 }
 
